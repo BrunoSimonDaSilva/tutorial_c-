@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using selecao.Models;
+using selecao.Service;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,26 +13,55 @@ namespace selecao.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IServiceSelecao _serviceSelecao;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IServiceSelecao serviceSelecao )
         {
             _logger = logger;
+            _serviceSelecao = serviceSelecao;
         }
 
         public IActionResult Index()
         {
+            return View(_serviceSelecao.GetAll());
+        }
+        public IActionResult Create()
+        {
             return View();
         }
-
+        public IActionResult Edit([Bind("Id,Nome,Titulos")] Time time)
+        {
+            return View(_serviceSelecao.GetById(time.Id));
+        }
+        public IActionResult Delete(int? id)
+        {
+            return View();
+        }
         public IActionResult Privacy()
         {
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateConfirm([Bind("Id,Nome,Titulos")] Time time)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            _serviceSelecao.Create(time);
+            return RedirectToAction("Index");
         }
+
+        public IActionResult DeleteConfirm(int id)
+        {
+            _serviceSelecao.Delete(id);
+            return RedirectToAction("Index");
+        }
+        public IActionResult EditConfirm(Time time)
+        {
+            Time del = _serviceSelecao.GetById(time.Id);
+            _serviceSelecao.Update(time);
+            return RedirectToAction("Index");
+        }
+
+
     }
 }
